@@ -1,7 +1,9 @@
+import csv
 import json
 import os
 import re
 import shutil
+from io import StringIO
 from pathlib import Path
 from shlex import quote as sh_quote
 
@@ -211,3 +213,16 @@ async def github_gist_delete(url):
     """delete a GitHub gist identified by `url`"""
     cmd_exit = await run(f"gh gist delete {url}")
     return cmd_exit
+
+
+async def get_lizard_metrics(path, exclude=None):
+    """run lizard to get the files, source lines of code and cyclomatic complexity of the code in path"""
+    exclude_opt = "" if exclude is None else f" --exclude '{path}/{exclude}'"
+    cmd_exit = await run(f"lizard {path} --csv --verbose{exclude_opt}")
+    rows = list(csv.DictReader(StringIO(cmd_exit.stdout)))
+    c = [int(r["CCN"]) for r in rows]
+    return {
+        "files": list(set([r["file"] for r in rows])),
+        "sloc": sum([int(r["NLOC"]) for r in rows]),
+        "cyclomatic": sum(c) / len(c),
+    }

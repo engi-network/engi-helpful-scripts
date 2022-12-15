@@ -14,3 +14,12 @@ async def download_file(url, dir="."):
         for chunk in r.iter_content(chunk_size=128):
             fd.write(chunk)
     return filename
+
+
+def is_patch_file(url):
+    """return True if url could be a patch file"""
+    try:
+        r = requests.head(url)
+        return r.ok and "text/plain" in r.headers["Content-Type"]
+    except:
+        return False
