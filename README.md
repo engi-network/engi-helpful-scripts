@@ -1,7 +1,9 @@
 # engi-helpful-scripts
 
-# Environment
+## Environment
 
 ```bash
 GITHUB_TOKEN = ""
+GPG_PRIVATE_KEY = ""
+GPG_PASSPHRASE = ""
 ```
