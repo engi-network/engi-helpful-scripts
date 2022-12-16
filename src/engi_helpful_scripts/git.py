@@ -134,7 +134,6 @@ def get_github_token(github_token):
 
 async def github_checkout(url, dest, github_token=None, no_clean=False):
     """check out code at GitHub URL <url> to local path <dest>"""
-    assert "github" in url
     url_ = "/".join(url.split("/")[-2:]).replace(".git", "")
     dest_path = Path(dest)
     if (dest_path / ".git").exists():
