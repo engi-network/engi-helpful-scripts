@@ -2,7 +2,7 @@ import asyncio
 import os
 import tempfile
 from asyncio.subprocess import PIPE
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 from time import perf_counter
 
@@ -24,6 +24,28 @@ def set_tmpdir():
     with tempfile.TemporaryDirectory() as tmpdir:
         with set_directory(tmpdir):
             yield tmpdir
+
+
+@asynccontextmanager
+async def set_docker_tmp_volume(
+    prefix=None, working_dir_env_var="ENGI_WORKING_DIR", volume_env_var="ENGI_WORKING_VOL"
+):
+    with tempfile.TemporaryDirectory(prefix=prefix) as tmpdir:
+        # the volume name is the tmp dir basename
+        tmpdir_p = Path(tmpdir)
+        # create the external volume
+        await run(
+            f"docker volume create --driver local -o o=bind -o type=none -o device='{tmpdir}' {tmpdir_p.name}"
+        )
+        # set the environment variables for use in a docker-compose.yml
+        os.environ[working_dir_env_var] = tmpdir
+        os.environ[volume_env_var] = tmpdir_p.name
+        # do your thing in docker
+        yield tmpdir_p
+        # remove the volume and delete the environment variables
+        await run(f"docker volume rm {tmpdir_p.name}")
+        del os.environ[working_dir_env_var]
+        del os.environ[volume_env_var]
 
 
 class CmdExit(object):
