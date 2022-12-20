@@ -162,7 +162,7 @@ async def is_git_secrets():
 async def get_git_secrets():
     try:
         private_key = "private_key.gpg"
-        open(private_key, "w").write(os.environ["GPG_PRIVATE_KEY"])
+        open(private_key, "w").write(os.environ["GPG_PRIVATE_KEY"].replace(",", "\n"))
         # import PGP private key from environment variable
         await run(f"gpg --batch --yes --pinentry-mode loopback --import {private_key}")
         passphrase = os.environ["GPG_PASSPHRASE"]
