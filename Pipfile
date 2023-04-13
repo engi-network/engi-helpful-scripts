@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 helpful-scripts-engi = {editable = true, path = "."}
 requests = "*"
+pyyaml = "*"
 
 [dev-packages]
 pytest = "*"
