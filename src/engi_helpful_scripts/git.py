@@ -60,38 +60,36 @@ def all_one_char(string, char):
 
 
 class StatString(object):
-    def __init__(self, filename, stat_str):
-        self.stat_str = stat_str
+    def __init__(self, filename, added, deleted):
         self.filename = filename
+        self.added = filename in added
+        self.deleted = filename in deleted
 
     @property
     def is_edit(self):
         """+++++++++--"""
-        return "+" in self.stat_str and "-" in self.stat_str
+        return not (self.added or self.deleted)
 
     @property
     def is_add(self):
         """+++++++++++++++++++++++"""
-        return self.stat_str != "" and all_one_char(self.stat_str, "+")
+        return self.added
 
     @property
     def is_delet(self):
         """-----------------------"""
-        return self.stat_str == "" or all_one_char(self.stat_str, "-")
+        return self.deleted
 
     def __repr__(self):
         return f"{self.filename=} {self.is_add=} {self.is_edit=} {self.is_delet=}"
 
 
-def parse_git_diff_stat(cmd_output):
+def parse_git_diff_stat(cmd_output, cmd_added, cmd_deleted):
+    added_set = set(cmd_added.splitlines())
+    deleted_set = set(cmd_deleted.splitlines())
     stats = []
-    for s in cmd_output.splitlines()[:-1]:
-        bits = s.split()
-        ss = None
-        if len(bits) == 3:
-            ss = StatString(bits[0], "")
-        elif len(bits) == 4:
-            ss = StatString(bits[0], bits[-1])
+    for s in cmd_output.splitlines():
+        ss = StatString(s, added_set, deleted_set)
         if ss is not None:
             stats.append(ss)
 
@@ -121,8 +119,10 @@ async def get_git_url():
 
 async def git_diff_stat(commit1, commit2):
     """run git diff --stat and parse the output"""
-    cmd_exit = await git_diff(commit1, commit2, extra_args=" --stat")
-    return parse_git_diff_stat(cmd_exit.stdout)
+    cmd_added = await git_diff(commit1, commit2, extra_args=" --name-only --diff-filter=A")
+    cmd_deleted = await git_diff(commit1, commit2, extra_args=" --name-only --diff-filter=D")
+    cmd_changed = await git_diff(commit1, commit2, extra_args=" --name-only")
+    return parse_git_diff_stat(cmd_changed.stdout, cmd_added.stdout, cmd_deleted.stdout)
 
 
 def get_github_token(github_token):
