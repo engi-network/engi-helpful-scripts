@@ -67,17 +67,14 @@ class StatString(object):
 
     @property
     def is_edit(self):
-        """+++++++++--"""
         return not (self.added or self.deleted)
 
     @property
     def is_add(self):
-        """+++++++++++++++++++++++"""
         return self.added
 
     @property
     def is_delet(self):
-        """-----------------------"""
         return self.deleted
 
     def __repr__(self):
