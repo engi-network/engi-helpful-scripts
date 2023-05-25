@@ -108,13 +108,17 @@ async def test_should_be_check_github_url(csharp_repo_url):
 
 
 def test_should_parse_git_diff_stat_output():
-    cmd_output = """PrimeService/PrimeService.cs | 11 +++++++++--
- PrimeService/bar.cs          | 23 +++++++++++++++++++++++
- PrimeService/foo.cs          |  0
- 3 files changed, 32 insertions(+), 2 deletions(-)"""
-    stats = parse_git_diff_stat(cmd_output)
+    changed_cmd_output = """PrimeService/ChangedPrimeService.cs
+PrimeService/bar.cs
+PrimeService/foo.cs
+ """
+    added_cmd_output = """PrimeService/bar.cs
+ """
+    deleted_cmd_output = """PrimeService/foo.cs
+ """
+    stats = parse_git_diff_stat(changed_cmd_output, added_cmd_output, deleted_cmd_output)
     print(stats)
-    assert stats[0].filename == "PrimeService/PrimeService.cs"
+    assert stats[0].filename == "PrimeService/ChangedPrimeService.cs"
     assert stats[0].is_edit
     assert not stats[0].is_add
     assert not stats[0].is_delet
