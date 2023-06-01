@@ -78,7 +78,7 @@ async def log_stream(stream):
     return result
 
 
-async def timeout_task(cmd):
+async def timeout_task(cmd, log_cmd=None, raise_code=0, input=None):
     t1_start = perf_counter()
     proc = await asyncio.create_subprocess_shell(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdin, stdout, stderr = await asyncio.gather(
@@ -107,6 +107,6 @@ async def run(cmd, log_cmd=None, raise_code=0, input=None):
     # don't log env vars
     # log_cmd = re.subn(r"\S+=\S+ ", "", log_cmd)[0]
     log.info(log_cmd)
-    cmd_exit = await asyncio.wait_for(timeout_task(), SUBPROCESS_TIMEOUT_SECS)
+    cmd_exit = await asyncio.wait_for(timeout_task(cmd, log_cmd, raise_code, input), SUBPROCESS_TIMEOUT_SECS)
 
     return cmd_exit
