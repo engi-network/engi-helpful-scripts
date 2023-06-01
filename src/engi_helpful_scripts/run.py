@@ -8,6 +8,7 @@ from time import perf_counter
 
 from .log import log
 
+SUBPROCESS_TIMEOUT_SECS = 3600
 
 @contextmanager
 def set_directory(path):
@@ -77,13 +78,7 @@ async def log_stream(stream):
     return result
 
 
-async def run(cmd, log_cmd=None, raise_code=0, input=None):
-    """log and run `cmd` optionally log `log_cmd` rather than `cmd` for when `cmd` contains secrets"""
-    if log_cmd is None:
-        log_cmd = cmd
-    # don't log env vars
-    # log_cmd = re.subn(r"\S+=\S+ ", "", log_cmd)[0]
-    log.info(log_cmd)
+async def timeout_task(cmd, log_cmd=None, raise_code=0, input=None):
     t1_start = perf_counter()
     proc = await asyncio.create_subprocess_shell(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdin, stdout, stderr = await asyncio.gather(
@@ -101,4 +96,17 @@ async def run(cmd, log_cmd=None, raise_code=0, input=None):
     if raise_code is not None and proc.returncode != raise_code:
         log.error(stderr)
         raise CmdError(log_cmd, cmd_exit)
+
+    return cmd_exit
+
+
+async def run(cmd, log_cmd=None, raise_code=0, input=None):
+    """log and run `cmd` optionally log `log_cmd` rather than `cmd` for when `cmd` contains secrets"""
+    if log_cmd is None:
+        log_cmd = cmd
+    # don't log env vars
+    # log_cmd = re.subn(r"\S+=\S+ ", "", log_cmd)[0]
+    log.info(log_cmd)
+    cmd_exit = await asyncio.wait_for(timeout_task(cmd, log_cmd, raise_code, input), SUBPROCESS_TIMEOUT_SECS)
+
     return cmd_exit
