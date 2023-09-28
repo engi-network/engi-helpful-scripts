@@ -34,6 +34,8 @@ async def set_docker_tmp_volume(
     with tempfile.TemporaryDirectory(prefix=prefix) as tmpdir:
         # the volume name is the tmp dir basename
         tmpdir_p = Path(tmpdir)
+        # set temporary directory with sticky bit (i.e. /tmp)
+        os.chmod(tmpdir_p, 0o1777)
         # create the external volume
         await run(
             f"docker volume create --driver local -o o=bind -o type=none -o device='{tmpdir}' {tmpdir_p.name}"
