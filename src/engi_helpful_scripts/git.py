@@ -213,8 +213,9 @@ async def github_gist_delete(url):
 
 async def get_lizard_metrics(path, exclude=None):
     """run lizard to get the files, source lines of code and cyclomatic complexity of the code in path"""
-    exclude_opt = "" if exclude is None else f" --exclude '{path}/{exclude}'"
-    cmd_exit = await run(f"lizard {path} --csv --verbose{exclude_opt}")
+    exclude_opt = "" if exclude is None else exclude
+    cmd = f"lizard {path} --csv --verbose {exclude_opt}"
+    cmd_exit = await run(cmd)
     rows = list(csv.DictReader(StringIO(cmd_exit.stdout)))
     c = [int(r["CCN"]) for r in rows]
     return {
